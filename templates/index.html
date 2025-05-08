@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cataract Detection</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        /* Header */
+        h1 {
+            font-size: 2.5rem;
+            color: #4a90e2;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            animation: fadeInDown 0.8s ease-in-out;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease-in-out;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-label {
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-label:hover {
+            background-color: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Image Preview */
+        .image-container {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed #4a90e2;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+            overflow: hidden;
+            position: relative;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+
+        .image-container.drag-over {
+            border-color: #357abd;
+            background-color: #e3f2fd;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-container::before {
+            content: "Drag & Drop or Paste Image Here";
+            color: #999;
+            font-size: 1rem;
+            position: absolute;
+            display: none;
+        }
+
+        .image-container.empty::before {
+            display: block;
+        }
+
+        /* Submit Button */
+        #submitButton {
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 200px;
+            margin: 10px auto;
+            display: block;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #submitButton:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #submitButton:hover:not(:disabled) {
+            background-color: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Result Section */
+        #result {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #4a90e2;
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            /*animation: fadeIn 0.5s ease-in;*/
+            transform: scale(0.95);
+            transition: all 0.3s ease;
+        }
+
+        #result.zoomed {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .prediction-cataract {
+            color: #740505f0; /* Magenta */
+            font-weight: bold;
+        }
+
+        .prediction-normal {
+            color: #006400; /* Dark Green */
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .upload-section {
+                padding: 20px;
+            }
+
+            .upload-label, #submitButton {
+                font-size: 0.9rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Eye Cataract Detector</h1>
+
+    <!-- Upload Section -->
+    <div class="upload-section">
+        <label for="imageUpload" class="upload-label">Choose an Image</label>
+        <input type="file" id="imageUpload" accept="image/*">
+        <div class="image-container empty">
+            <img id="uploadedImage" src="#" alt="Uploaded Image" style="display: none;">
+        </div>
+        <button id="submitButton" disabled>Analyze Image</button>
+    </div>
+
+    <!-- Result Section -->
+    <div id="result" class="fade-in"></div>
+
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const imageContainer = document.querySelector('.image-container');
+        const submitButton = document.getElementById('submitButton');
+        const resultDiv = document.getElementById('result');
+
+        // Handle image upload
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    uploadedImage.src = reader.result;
+                    uploadedImage.style.display = 'block';
+                    imageContainer.classList.remove('empty');
+                    submitButton.disabled = false;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                uploadedImage.src = '#';
+                uploadedImage.style.display = 'none';
+                imageContainer.classList.add('empty');
+                submitButton.disabled = true;
+            }
+        });
+
+        // Handle drag-and-drop
+        imageContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageContainer.classList.add('drag-over');
+        });
+
+        imageContainer.addEventListener('dragleave', () => {
+            imageContainer.classList.remove('drag-over');
+        });
+
+        imageContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageContainer.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                imageUpload.files = e.dataTransfer.files;
+                const changeEvent = new Event('change');
+                imageUpload.dispatchEvent(changeEvent);
+            }
+        });
+
+        // Handle paste image
+        document.addEventListener('paste', (e) => {
+            const file = e.clipboardData.files[0];
+            if (file) {
+                imageUpload.files = e.clipboardData.files;
+                const changeEvent = new Event('change');
+                imageUpload.dispatchEvent(changeEvent);
+            }
+        });
+
+         // Handle form submission
+         submitButton.addEventListener('click', async function() {
+            const file = imageUpload.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Format probability as percentage with 2 decimal places
+                    const probabilityPercent = (data.probability * 100).toFixed(2);
+                    
+                    // Add appropriate class based on prediction
+                    const predictionClass = data.prediction === 'Cataract' ? 'prediction-cataract' : 'prediction-normal';
+                    
+                    resultDiv.innerHTML = `
+                        <p><strong>Prediction:</strong> <span class="${predictionClass}">${data.prediction}</span></p>
+                        <p><strong>Cataract Probability:</strong> ${probabilityPercent}%</p>
+                    `;
+                    resultDiv.classList.add('fade-in', 'zoomed');
+                    
+                    // Remove zoom effect after animation completes
+                    setTimeout(() => {
+                        resultDiv.classList.remove('zoomed');
+                    }, 300);
+                } else {
+                    resultDiv.textContent = 'Error processing image. Please try again.';
+                    resultDiv.classList.add('fade-in');
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Network error occurred. Please check your connection.';
+                resultDiv.classList.add('fade-in');
+            }
+        });
+    </script>
+</body>
+</html>
