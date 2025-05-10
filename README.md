@@ -23,6 +23,22 @@ OpenCV (for image processing)
 
 NumPy, Pandas (data handling)
 
+
+# Model's Description
+Preprocessing techniques :
+1. G-Channel Extraction
+3. Top Bottom Hat Transformation
+4. Trilateral Filtering
+
+Feature Extraction Techniques:
+1. Extract Luminance Features
+2. Pre-trained CNN (ResNet50)
+
+Classification Techniques:
+1. LSTM
+2. Attention Mechanism
+
+
 # Web Application
 Flask (backend framework)
 
